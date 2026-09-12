@@ -21,6 +21,8 @@ import notificationRoutes from './routes/notification.routes.js';
 import lguRoutes from './routes/lgu.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import psychologistSelfRoutes from './routes/psychologist-self.routes.js';
+import journalRoutes from './routes/journal.routes.js';
+import residentSelfRoutes from './routes/resident-self.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -54,6 +56,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/lgu', lguRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/me/psychologist', psychologistSelfRoutes);
+app.use('/api/journals', journalRoutes);
+app.use('/api/me', residentSelfRoutes);
 
 // Multer rejects oversized or wrong-type uploads with its own error class.
 app.use((err, _req, res, next) => {
@@ -79,6 +83,11 @@ app.use(notFound);
 app.use(errorHandler);
 
 registerSockets(io);
+
+// The journal pipeline (upload, transcribe, analyse) can take several
+// seconds on a long entry. Node's default 5s headers timeout would abort it.
+server.requestTimeout = 120_000;
+server.headersTimeout = 125_000;
 
 const port = process.env.PORT || 4000;
 server.listen(port, () => console.log(`OpenUp API listening on http://localhost:${port}`));

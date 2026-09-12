@@ -15,6 +15,7 @@ const supabase = createClient(
 );
 
 export const LICENSE_BUCKET = 'licenses';
+export const JOURNAL_BUCKET = 'journals';
 
 /** Upload a buffer and return the storage path (not a public URL). */
 export async function uploadLicense(psychologistId, file) {
@@ -44,4 +45,34 @@ export async function signLicenseUrl(path, expiresInSeconds = 300) {
 
 export async function deleteLicense(path) {
   await supabase.storage.from(LICENSE_BUCKET).remove([path]);
+}
+
+/**
+ * Voice journal audio. Private bucket: these recordings are a resident
+ * talking about their mental health, so nothing is ever publicly reachable
+ * and every read goes through a short-lived signed URL.
+ */
+export async function uploadJournalAudio(userId, file) {
+  const ext = (file.mimetype.split('/')[1] || 'webm').split(';')[0];
+  const path = `user-${userId}/${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from(JOURNAL_BUCKET)
+    .upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
+
+  if (error) throw new Error(`Audio upload failed: ${error.message}`);
+  return path;
+}
+
+export async function signJournalUrl(path, expiresInSeconds = 300) {
+  const { data, error } = await supabase.storage
+    .from(JOURNAL_BUCKET)
+    .createSignedUrl(path, expiresInSeconds);
+
+  if (error) throw new Error(`Could not sign URL: ${error.message}`);
+  return data.signedUrl;
+}
+
+export async function deleteJournalAudio(path) {
+  await supabase.storage.from(JOURNAL_BUCKET).remove([path]);
 }

@@ -110,7 +110,7 @@ export default function Dashboard() {
                 {next.covered_by_credit && ' · covered by Care Credits'}
               </p>
             </div>
-            <Link to={`/app/session/${next.booking_id}`} className="btn-primary h-9 px-4">Join</Link>
+            <Link to="/app/sessions" className="btn-primary h-9 px-4">View</Link>
           </div>
         ) : (
           <div className="mt-3 flex items-center justify-between gap-4">

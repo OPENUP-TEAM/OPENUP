@@ -13,8 +13,12 @@ import Landing from './pages/public/Landing.jsx';
 import Login from './pages/public/Login.jsx';
 import Register from './pages/public/Register.jsx';
 import Dashboard from './pages/resident/Dashboard.jsx';
+import Journal from './pages/resident/Journal.jsx';
+import Book from './pages/resident/Book.jsx';
+import Sessions from './pages/resident/Sessions.jsx';
 import PsychologistDashboard from './pages/psychologist/Dashboard.jsx';
 import PendingVerification from './pages/psychologist/PendingVerification.jsx';
+import Requests from './pages/psychologist/Requests.jsx';
 import LguDashboard from './pages/lgu/Dashboard.jsx';
 import AdminDashboard from './pages/admin/Dashboard.jsx';
 import Verification from './pages/admin/Verification.jsx';
@@ -26,6 +30,7 @@ const RESIDENT_NAV = [
   { to: '/app/companion', label: 'Companion', icon: MessageCircleHeart },
   { to: '/app/chat',      label: 'Chat',      icon: MessagesSquare },
   { to: '/app/book',      label: 'Book',      icon: CalendarPlus },
+  { to: '/app/sessions',  label: 'Sessions',  icon: CalendarCheck },
   { to: '/app/groups',    label: 'Groups',    icon: Users },
   { to: '/app/mood',      label: 'Mood',      icon: LineChart },
   { to: '/app/journal',   label: 'Journal',   icon: Mic },
@@ -77,6 +82,9 @@ export default function App() {
             }
           >
             <Route index element={<Dashboard />} />
+            <Route path="journal" element={<Journal />} />
+            <Route path="book" element={<Book />} />
+            <Route path="sessions" element={<Sessions />} />
           </Route>
 
           {/* Psychologist awaiting verification — no shell, no navigation */}
@@ -99,6 +107,7 @@ export default function App() {
             }
           >
             <Route index element={<PsychologistDashboard />} />
+            <Route path="requests" element={<Requests />} />
           </Route>
 
           {/* LGU */}
