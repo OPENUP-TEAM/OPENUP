@@ -7,9 +7,11 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "verify": "node scripts/verify-setup.js",
-    "set-password": "node scripts/set-password.js"
+    "set-password": "node scripts/set-password.js",
+    "test:api": "node scripts/test-api.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

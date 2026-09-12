@@ -19,6 +19,8 @@ import psychologistRoutes from './routes/psychologist.routes.js';
 import bookingRoutes from './routes/booking.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import lguRoutes from './routes/lgu.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import psychologistSelfRoutes from './routes/psychologist-self.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -50,6 +52,17 @@ app.use('/api/psychologists', psychologistRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/lgu', lguRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/me/psychologist', psychologistSelfRoutes);
+
+// Multer rejects oversized or wrong-type uploads with its own error class.
+app.use((err, _req, res, next) => {
+  if (err?.code === 'LIMIT_FILE_SIZE')
+    return res.status(400).json({ error: 'That file is larger than 8 MB.' });
+  if (err?.code === 'LIMIT_FILE_COUNT')
+    return res.status(400).json({ error: 'Upload one file at a time.' });
+  next(err);
+});
 
 // Turn Zod failures into readable 400s before the generic handler sees them.
 app.use((err, _req, res, next) => {

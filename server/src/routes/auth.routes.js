@@ -108,8 +108,13 @@ router.post(
 
     if (user.status === 'suspended')
       throw ApiError.forbidden('This account is suspended. Contact the administrator.');
-    if (user.status === 'pending')
-      throw ApiError.forbidden('Your license is still being reviewed. We will email you once it is approved.');
+
+    // Pending and rejected psychologists are allowed in deliberately. They
+    // need the verification screen to read the reviewer's reason, upload a
+    // corrected license, and check their status. Every other route is gated
+    // by requireVerifiedPsychologist, so they can reach nothing else.
+    if (user.status === 'rejected' && user.role !== 'psychologist')
+      throw ApiError.forbidden('This account is not active. Contact the administrator.');
 
     res.json({ user: publicUser(user), token: signToken(user) });
   })

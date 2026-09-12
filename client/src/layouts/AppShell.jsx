@@ -22,12 +22,10 @@ const RESIDENT_NAV = [
   { to: '/app/resources',  label: 'Resources',    icon: BookOpen },
 ];
 
-// Mobile keeps the five most-reached-for destinations.
-const MOBILE_NAV = RESIDENT_NAV.filter((i) =>
-  ['/app', '/app/companion', '/app/mood', '/app/book', '/app/journal'].includes(i.to)
-);
-
 export default function AppShell({ nav = RESIDENT_NAV, title = 'OpenUp' }) {
+  // Mobile shows the first five destinations of whichever role is signed in.
+  const mobileNav = nav.slice(0, 5);
+
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [unread, setUnread] = useState(0);
@@ -70,7 +68,7 @@ export default function AppShell({ nav = RESIDENT_NAV, title = 'OpenUp' }) {
 
         <div className="pt-4 mt-4 border-t border-line space-y-0.5">
           <NavLink
-            to="/app/notifications"
+            to={`${nav[0]?.to ?? '/app'}/notifications`}
             className="flex items-center gap-3 px-3 h-10 rounded-[10px] text-sm font-medium text-ink-soft hover:bg-line/60"
           >
             <Bell size={17} />
@@ -94,7 +92,7 @@ export default function AppShell({ nav = RESIDENT_NAV, title = 'OpenUp' }) {
       {/* Mobile top bar */}
       <header className="lg:hidden flex items-center justify-between px-4 h-14 border-b border-line">
         <span className="font-extrabold tracking-tight">{title}</span>
-        <NavLink to="/app/notifications" className="relative p-2" aria-label="Notifications">
+        <NavLink to={`${nav[0]?.to ?? '/app'}/notifications`} className="relative p-2" aria-label="Notifications">
           <Bell size={20} />
           {unread > 0 && (
             <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-tide-700" />
@@ -108,7 +106,7 @@ export default function AppShell({ nav = RESIDENT_NAV, title = 'OpenUp' }) {
 
       {/* Mobile bottom tabs */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-paper-raised border-t border-line grid grid-cols-5">
-        {MOBILE_NAV.map(({ to, label, icon: Icon, end }) => (
+        {mobileNav.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
