@@ -20,9 +20,13 @@ import PsychologistDashboard from './pages/psychologist/Dashboard.jsx';
 import PendingVerification from './pages/psychologist/PendingVerification.jsx';
 import Requests from './pages/psychologist/Requests.jsx';
 import LguDashboard from './pages/lgu/Dashboard.jsx';
+import Budget from './pages/lgu/Budget.jsx';
 import AdminDashboard from './pages/admin/Dashboard.jsx';
 import SessionRoom from './pages/SessionRoom.jsx';
+import Chat from './pages/Chat.jsx';
+import Companion from './pages/resident/Companion.jsx';
 import Verification from './pages/admin/Verification.jsx';
+import Credits from './pages/admin/Credits.jsx';
 
 // Figure 27: navigation per role. Items without a page yet are added as
 // each module is built.
@@ -42,8 +46,8 @@ const PSYCHOLOGIST_NAV = [
   { to: '/psychologist',           label: 'Dashboard',    icon: LayoutGrid, end: true },
   { to: '/psychologist/requests',  label: 'Requests',     icon: CalendarCheck },
   { to: '/psychologist/sessions',  label: 'Sessions',     icon: CalendarPlus },
-  { to: '/psychologist/clients',   label: 'Clients',      icon: Users },
   { to: '/psychologist/chat',      label: 'Chat',         icon: MessagesSquare },
+  { to: '/psychologist/clients',   label: 'Clients',      icon: Users },
   { to: '/psychologist/reports',   label: 'Reports',      icon: FileText },
 ];
 
@@ -86,6 +90,8 @@ export default function App() {
             <Route path="journal" element={<Journal />} />
             <Route path="book" element={<Book />} />
             <Route path="sessions" element={<Sessions />} />
+            <Route path="chat" element={<Chat />} />
+            <Route path="companion" element={<Companion />} />
           </Route>
 
           {/* Counseling session — full screen, no shell around the call */}
@@ -127,6 +133,7 @@ export default function App() {
           >
             <Route index element={<PsychologistDashboard />} />
             <Route path="requests" element={<Requests />} />
+            <Route path="chat" element={<Chat />} />
           </Route>
 
           {/* LGU */}
@@ -139,6 +146,7 @@ export default function App() {
             }
           >
             <Route index element={<LguDashboard />} />
+            <Route path="budget" element={<Budget />} />
           </Route>
 
           {/* Admin */}
@@ -152,6 +160,7 @@ export default function App() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="verification" element={<Verification />} />
+            <Route path="credits" element={<Credits />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

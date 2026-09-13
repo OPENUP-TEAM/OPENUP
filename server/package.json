@@ -8,9 +8,11 @@
     "start": "node src/index.js",
     "verify": "node scripts/verify-setup.js",
     "set-password": "node scripts/set-password.js",
-    "test:api": "node scripts/test-api.js"
+    "test:api": "node scripts/test-api.js",
+    "test:crisis": "node scripts/test-crisis-floor.js"
   },
   "dependencies": {
+    "@google-cloud/speech": "^6.7.0",
     "@supabase/supabase-js": "^2.45.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
