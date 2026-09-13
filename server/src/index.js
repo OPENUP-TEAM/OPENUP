@@ -23,6 +23,7 @@ import adminRoutes from './routes/admin.routes.js';
 import psychologistSelfRoutes from './routes/psychologist-self.routes.js';
 import journalRoutes from './routes/journal.routes.js';
 import residentSelfRoutes from './routes/resident-self.routes.js';
+import sessionRoutes from './routes/session.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +59,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/me/psychologist', psychologistSelfRoutes);
 app.use('/api/journals', journalRoutes);
 app.use('/api/me', residentSelfRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 // Multer rejects oversized or wrong-type uploads with its own error class.
 app.use((err, _req, res, next) => {

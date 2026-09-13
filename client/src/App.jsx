@@ -21,6 +21,7 @@ import PendingVerification from './pages/psychologist/PendingVerification.jsx';
 import Requests from './pages/psychologist/Requests.jsx';
 import LguDashboard from './pages/lgu/Dashboard.jsx';
 import AdminDashboard from './pages/admin/Dashboard.jsx';
+import SessionRoom from './pages/SessionRoom.jsx';
 import Verification from './pages/admin/Verification.jsx';
 
 // Figure 27: navigation per role. Items without a page yet are added as
@@ -86,6 +87,24 @@ export default function App() {
             <Route path="book" element={<Book />} />
             <Route path="sessions" element={<Sessions />} />
           </Route>
+
+          {/* Counseling session — full screen, no shell around the call */}
+          <Route
+            path="/app/session/:bookingId"
+            element={
+              <ProtectedRoute roles={['resident']}>
+                <SessionRoom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/psychologist/session/:bookingId"
+            element={
+              <ProtectedRoute roles={['psychologist']}>
+                <SessionRoom />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Psychologist awaiting verification — no shell, no navigation */}
           <Route

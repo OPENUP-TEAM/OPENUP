@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { format, parseISO, isPast } from 'date-fns';
 import { Check, X, Clock, Wallet, UserRound, Video } from 'lucide-react';
 import { api } from '../../lib/api.js';
@@ -168,13 +169,13 @@ export default function Requests() {
                     )}
 
                     {isConfirmed && !past && (
-                      <a
-                        href={`/psychologist/session/${b.booking_id}`}
+                      <Link
+                        to={`/psychologist/session/${b.booking_id}`}
                         className="btn-primary h-9 px-4"
                       >
                         <Video size={15} />
                         Join
-                      </a>
+                      </Link>
                     )}
 
                     {/* Only offered after the fact: marking a session complete
