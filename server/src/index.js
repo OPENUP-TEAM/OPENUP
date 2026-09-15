@@ -27,6 +27,10 @@ import sessionRoutes from './routes/session.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import creditsRoutes from './routes/credits.routes.js';
+import groupRoutes from './routes/group.routes.js';
+import subscriptionRoutes from './routes/subscription.routes.js';
+import appointmentsRoutes from './routes/appointments.routes.js';
+import resourceRoutes from './routes/resource.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -66,6 +70,10 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/companion', aiRoutes);
 app.use('/api/credits', creditsRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/appointments', appointmentsRoutes);
+app.use('/api/resources', resourceRoutes);
 
 // Multer rejects oversized or wrong-type uploads with its own error class.
 app.use((err, _req, res, next) => {

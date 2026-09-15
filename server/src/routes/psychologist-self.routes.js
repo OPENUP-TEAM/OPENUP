@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
+import { z } from 'zod';
 import { query } from '../config/db.js';
 import { asyncHandler, ApiError } from '../utils/http.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -122,6 +123,168 @@ router.get(
     const path = rows[0]?.license_doc_url;
     if (!path) throw ApiError.notFound('No document uploaded yet.');
     res.json({ document_url: await signLicenseUrl(path) });
+  })
+);
+
+
+// ---------------------------------------------------------------------
+// Module: Psychologist Dashboard (Joan Aballe)
+//   1. Manage Availability / Calendar
+//   2. View Scheduled Sessions   (served by /api/bookings)
+//   3. Track Earnings
+// ---------------------------------------------------------------------
+
+/** Weekly availability windows. */
+router.get(
+  '/availability',
+  asyncHandler(async (req, res) => {
+    const { rows: p } = await query(
+      'SELECT psychologist_id FROM psychologist WHERE user_id = $1',
+      [req.user.user_id]
+    );
+    if (!p.length) throw ApiError.notFound('No psychologist profile on this account.');
+
+    const { rows } = await query(
+      `SELECT availability_id, day_of_week, start_time, end_time, is_active
+         FROM availability WHERE psychologist_id = $1
+        ORDER BY day_of_week, start_time`,
+      [p[0].psychologist_id]
+    );
+    res.json({ availability: rows });
+  })
+);
+
+/**
+ * Add a window.
+ *
+ * Overlapping windows on the same day would generate duplicate booking
+ * slots, so they are rejected rather than merged: a counselor who typed
+ * the wrong time should be told, not silently corrected.
+ */
+router.post(
+  '/availability',
+  asyncHandler(async (req, res) => {
+    const { day_of_week, start_time, end_time } = z
+      .object({
+        day_of_week: z.coerce.number().int().min(0).max(6),
+        start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Use HH:MM.'),
+        end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Use HH:MM.'),
+      })
+      .parse(req.body);
+
+    if (end_time <= start_time)
+      throw ApiError.badRequest('The end time has to be after the start time.');
+
+    const { rows: p } = await query(
+      'SELECT psychologist_id FROM psychologist WHERE user_id = $1',
+      [req.user.user_id]
+    );
+    if (!p.length) throw ApiError.notFound('No psychologist profile on this account.');
+
+    const { rowCount: overlap } = await query(
+      `SELECT 1 FROM availability
+        WHERE psychologist_id = $1 AND day_of_week = $2 AND is_active
+          AND $3::time < end_time AND $4::time > start_time`,
+      [p[0].psychologist_id, day_of_week, start_time, end_time]
+    );
+    if (overlap)
+      throw ApiError.conflict('That overlaps a window you already have on this day.');
+
+    const { rows } = await query(
+      `INSERT INTO availability (psychologist_id, day_of_week, start_time, end_time)
+       VALUES ($1, $2, $3, $4)
+       RETURNING availability_id, day_of_week, start_time, end_time, is_active`,
+      [p[0].psychologist_id, day_of_week, start_time, end_time]
+    );
+    res.status(201).json({ window: rows[0] });
+  })
+);
+
+/**
+ * Remove a window.
+ *
+ * Bookings already made inside it are left alone. Clearing a Tuesday
+ * should stop new bookings, not cancel the resident who booked last week.
+ */
+router.delete(
+  '/availability/:id',
+  asyncHandler(async (req, res) => {
+    const { rows } = await query(
+      `DELETE FROM availability
+        WHERE availability_id = $1
+          AND psychologist_id = (SELECT psychologist_id FROM psychologist WHERE user_id = $2)
+        RETURNING day_of_week`,
+      [req.params.id, req.user.user_id]
+    );
+    if (!rows.length) throw ApiError.notFound('No such availability window.');
+
+    const { rows: upcoming } = await query(
+      `SELECT COUNT(*)::int AS n FROM booking b
+         JOIN psychologist p ON p.psychologist_id = b.psychologist_id
+        WHERE p.user_id = $1 AND b.status IN ('pending','confirmed')
+          AND b.schedule > now()
+          AND EXTRACT(DOW FROM b.schedule) = $2`,
+      [req.user.user_id, rows[0].day_of_week]
+    );
+
+    res.json({
+      ok: true,
+      existing_bookings: upcoming[0].n,
+      note: upcoming[0].n
+        ? 'Sessions already booked on this day still stand. Cancel them separately if you cannot attend.'
+        : null,
+    });
+  })
+);
+
+/** 3. Track Earnings. */
+router.get(
+  '/earnings',
+  asyncHandler(async (req, res) => {
+    const { rows: p } = await query(
+      'SELECT psychologist_id, rate_per_hour FROM psychologist WHERE user_id = $1',
+      [req.user.user_id]
+    );
+    if (!p.length) throw ApiError.notFound('No psychologist profile on this account.');
+    const id = p[0].psychologist_id;
+
+    const [totals, monthly, upcoming] = await Promise.all([
+      query(
+        `SELECT
+           COUNT(*) FILTER (WHERE b.status = 'completed')::int          AS sessions_completed,
+           COALESCE(SUM(pay.amount) FILTER (WHERE b.status = 'completed'), 0) AS earned,
+           COALESCE(SUM(pay.amount) FILTER (WHERE b.status = 'confirmed'
+                                            AND b.schedule > now()), 0) AS scheduled_value,
+           COUNT(*) FILTER (WHERE b.status = 'no_show')::int            AS missed
+         FROM booking b
+         LEFT JOIN payment pay ON pay.booking_id = b.booking_id
+        WHERE b.psychologist_id = $1`,
+        [id]
+      ),
+      query(
+        `SELECT date_trunc('month', b.schedule)::date AS month,
+                COUNT(*)::int                          AS sessions,
+                COALESCE(SUM(pay.amount), 0)           AS earned
+           FROM booking b
+           LEFT JOIN payment pay ON pay.booking_id = b.booking_id
+          WHERE b.psychologist_id = $1 AND b.status = 'completed'
+            AND b.schedule >= date_trunc('month', now()) - INTERVAL '5 months'
+          GROUP BY month ORDER BY month`,
+        [id]
+      ),
+      query(
+        `SELECT COUNT(*)::int AS n FROM booking
+          WHERE psychologist_id = $1 AND status = 'confirmed' AND schedule > now()`,
+        [id]
+      ),
+    ]);
+
+    res.json({
+      rate_per_hour: Number(p[0].rate_per_hour),
+      ...totals.rows[0],
+      upcoming_count: upcoming.rows[0].n,
+      monthly: monthly.rows,
+    });
   })
 );
 

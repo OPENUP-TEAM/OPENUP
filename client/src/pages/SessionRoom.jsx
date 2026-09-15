@@ -43,7 +43,7 @@ function loadJitsiScript(domain) {
   });
 }
 
-export default function SessionRoom() {
+export default function SessionRoom({ kind = 'booking' }) {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const containerRef = useRef(null);
@@ -63,15 +63,18 @@ export default function SessionRoom() {
   const [escalating, setEscalating] = useState(false);
   const [hotlines, setHotlines] = useState(null);
 
+  const isGroup = kind === 'group';
   const isCounselor = session?.role === 'psychologist';
-  const backTo = isCounselor ? '/psychologist/requests' : '/app/sessions';
+  const backTo = isGroup
+    ? (isCounselor ? '/psychologist/groups' : '/app/groups')
+    : (isCounselor ? '/psychologist/requests' : '/app/sessions');
 
   // 1. Fetch room details. The server decides whether this is joinable.
   useEffect(() => {
-    api(`/sessions/${bookingId}`)
+    api(isGroup ? `/groups/${bookingId}/room` : `/sessions/${bookingId}`)
       .then(setSession)
       .catch((err) => { setError(err.message); setConnecting(false); });
-  }, [bookingId]);
+  }, [bookingId, isGroup]);
 
   // 2. Start Jitsi once we have them.
   useEffect(() => {
@@ -129,11 +132,11 @@ export default function SessionRoom() {
 
   // 3. Notes, counselor only.
   useEffect(() => {
-    if (!isCounselor) return;
+    if (!isCounselor || isGroup) return;
     api(`/sessions/${bookingId}/notes`)
       .then(({ notes }) => setNotes(notes))
       .catch(() => {});
-  }, [isCounselor, bookingId]);
+  }, [isCounselor, bookingId, isGroup]);
 
   const saveNote = async () => {
     if (!draft.trim()) return;
@@ -210,7 +213,7 @@ export default function SessionRoom() {
         </div>
 
         <div className="flex gap-2">
-          {isCounselor && (
+          {isCounselor && !isGroup && (
             <>
               <button
                 onClick={() => setNotesOpen((o) => !o)}
@@ -248,7 +251,7 @@ export default function SessionRoom() {
         </div>
 
         {/* Notes panel: counselor only, alongside the call rather than over it. */}
-        {isCounselor && notesOpen && (
+        {isCounselor && !isGroup && notesOpen && (
           <aside className="w-full max-w-sm shrink-0 bg-paper border-l border-line flex flex-col">
             <div className="flex items-center justify-between px-4 h-12 border-b border-line">
               <h2 className="font-bold text-sm">Session notes</h2>

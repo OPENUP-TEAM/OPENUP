@@ -25,8 +25,13 @@ import AdminDashboard from './pages/admin/Dashboard.jsx';
 import SessionRoom from './pages/SessionRoom.jsx';
 import Chat from './pages/Chat.jsx';
 import Companion from './pages/resident/Companion.jsx';
+import Groups from './pages/Groups.jsx';
+import Resources from './pages/resident/Resources.jsx';
 import Verification from './pages/admin/Verification.jsx';
 import Credits from './pages/admin/Credits.jsx';
+import Subscriptions from './pages/admin/Subscriptions.jsx';
+import Appointments from './pages/admin/Appointments.jsx';
+import ResourcesAdmin from './pages/admin/Resources.jsx';
 
 // Figure 27: navigation per role. Items without a page yet are added as
 // each module is built.
@@ -47,6 +52,7 @@ const PSYCHOLOGIST_NAV = [
   { to: '/psychologist/requests',  label: 'Requests',     icon: CalendarCheck },
   { to: '/psychologist/sessions',  label: 'Sessions',     icon: CalendarPlus },
   { to: '/psychologist/chat',      label: 'Chat',         icon: MessagesSquare },
+  { to: '/psychologist/groups',    label: 'Groups',       icon: Users },
   { to: '/psychologist/clients',   label: 'Clients',      icon: Users },
   { to: '/psychologist/reports',   label: 'Reports',      icon: FileText },
 ];
@@ -65,6 +71,9 @@ const ADMIN_NAV = [
   { to: '/admin/users',         label: 'Users',         icon: Users },
   { to: '/admin/lgu',           label: 'LGU accounts',  icon: ShieldCheck },
   { to: '/admin/credits',       label: 'Care Credits',  icon: CreditCard },
+  { to: '/admin/subscriptions', label: 'Subscriptions', icon: FileText },
+  { to: '/admin/appointments',  label: 'Appointments',  icon: CalendarCheck },
+  { to: '/admin/resources',     label: 'Resources',     icon: BookOpen },
   { to: '/admin/settings',      label: 'Settings',      icon: Settings },
 ];
 
@@ -92,6 +101,8 @@ export default function App() {
             <Route path="sessions" element={<Sessions />} />
             <Route path="chat" element={<Chat />} />
             <Route path="companion" element={<Companion />} />
+            <Route path="groups" element={<Groups />} />
+            <Route path="resources" element={<Resources />} />
           </Route>
 
           {/* Counseling session — full screen, no shell around the call */}
@@ -108,6 +119,24 @@ export default function App() {
             element={
               <ProtectedRoute roles={['psychologist']}>
                 <SessionRoom />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Group session rooms */}
+          <Route
+            path="/app/group-session/:bookingId"
+            element={
+              <ProtectedRoute roles={['resident']}>
+                <SessionRoom kind="group" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/psychologist/group-session/:bookingId"
+            element={
+              <ProtectedRoute roles={['psychologist']}>
+                <SessionRoom kind="group" />
               </ProtectedRoute>
             }
           />
@@ -134,6 +163,7 @@ export default function App() {
             <Route index element={<PsychologistDashboard />} />
             <Route path="requests" element={<Requests />} />
             <Route path="chat" element={<Chat />} />
+            <Route path="groups" element={<Groups />} />
           </Route>
 
           {/* LGU */}
@@ -161,6 +191,9 @@ export default function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="verification" element={<Verification />} />
             <Route path="credits" element={<Credits />} />
+            <Route path="subscriptions" element={<Subscriptions />} />
+            <Route path="appointments" element={<Appointments />} />
+            <Route path="resources" element={<ResourcesAdmin />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
