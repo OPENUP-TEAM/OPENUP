@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { bindIo } from '../services/notification.service.js';
+import { markOnline, markOffline } from '../services/presence.service.js';
 
 /**
  * Real-time layer. Two things run over it:
@@ -34,6 +35,8 @@ export function registerSockets(io) {
 
   io.on('connection', (socket) => {
     socket.join(`user:${socket.user.user_id}`);
+    // Presence drives "is a psychologist available right now".
+    markOnline(socket.user.user_id);
 
     // Only the two participants may join a conversation room.
     socket.on('chat:join', async (conversationId, ack) => {
@@ -90,6 +93,7 @@ export function registerSockets(io) {
     });
 
     socket.on('disconnect', () => {
+      markOffline(socket.user.user_id);
       // Rooms are cleaned up by Socket.IO automatically.
     });
   });

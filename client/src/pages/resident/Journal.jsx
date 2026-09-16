@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { Phone, Trash2, Play, AlertCircle, Info } from 'lucide-react';
 import VoiceRecorder from '../../components/VoiceRecorder.jsx';
 import { api, getToken } from '../../lib/api.js';
+import CrisisPanel from '../../components/CrisisPanel.jsx';
 
 const EMOTION_TONE = {
   hopeful: 'bg-mood-5', calm: 'bg-mood-5', neutral: 'bg-mood-3',
@@ -96,38 +97,11 @@ export default function Journal() {
 
       {/* Crisis panel: shown above everything, never auto-dismissed. */}
       {crisis && (
-        <section className="rounded-card border-2 border-mood-1 bg-mood-1/5 p-5">
-          <div className="flex gap-3">
-            <AlertCircle size={20} className="text-mood-1 shrink-0 mt-0.5" />
-            <div>
-              <h2 className="font-bold">You do not have to handle this alone</h2>
-              <p className="mt-1.5 text-sm leading-relaxed">{crisis.message}</p>
-
-              <ul className="mt-4 space-y-2">
-                {crisis.hotlines.map((h) => (
-                  <li key={h.number}>
-                    <a
-                      href={`tel:${h.number.replace(/[^0-9+]/g, '')}`}
-                      className="flex items-center gap-3 bg-paper-raised border border-line rounded-[10px] px-3.5 py-3"
-                    >
-                      <Phone size={16} className="text-mood-1 shrink-0" />
-                      <span className="min-w-0">
-                        <span className="block font-semibold text-sm">{h.name}</span>
-                        {h.note && <span className="block text-xs text-ink-faint">{h.note}</span>}
-                      </span>
-                      <span className="ml-auto font-bold tabular-nums text-sm">{h.number}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-
-              <p className="mt-4 text-xs text-ink-soft">
-                A counselor has been notified and may reach out.
-                {crisis.contact_alerted && ' Your trusted contact was recorded for follow-up.'}
-              </p>
-            </div>
-          </div>
-        </section>
+        <CrisisPanel
+          message={crisis.message}
+          hotlines={crisis.hotlines}
+          contactAlerted={crisis.contact_alerted}
+        />
       )}
 
       <section className="card p-5">

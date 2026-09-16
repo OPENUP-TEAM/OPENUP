@@ -9,7 +9,7 @@ import { api } from '../../lib/api.js';
 /**
  * Figure 33: Counseling Booking.
  *
- * Three steps rather than one long form: choosing a counselor, choosing a
+ * Three steps rather than one long form: choosing a psychologist, choosing a
  * time, and confirming are separate decisions, and a resident who is
  * already struggling should not face all of them at once.
  */
@@ -102,7 +102,7 @@ export default function Book() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Book a session</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Every counselor here is licensed and verified by OpenUp.
+            Every psychologist here is licensed and verified by OpenUp.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export default function Book() {
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search by name"
               className="field pl-9"
-              aria-label="Search counselors"
+              aria-label="Search psychologists"
             />
           </div>
           <select
@@ -166,7 +166,7 @@ export default function Book() {
         {psychologists.length === 0 ? (
           <div className="card p-8 text-center">
             <p className="text-sm text-ink-soft">
-              No counselors match that. Try clearing the filters.
+              No psychologists match that. Try clearing the filters.
             </p>
           </div>
         ) : (
@@ -214,7 +214,7 @@ export default function Book() {
           className="flex items-center gap-1.5 text-sm font-semibold text-tide-700"
         >
           <ArrowLeft size={15} />
-          All counselors
+          All psychologists
         </button>
 
         <div>
@@ -294,7 +294,7 @@ export default function Book() {
       <div className="card p-5">
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-ink-faint">Counselor</dt>
+            <dt className="text-ink-faint">Psychologist</dt>
             <dd className="font-semibold text-right">{selected.name}</dd>
           </div>
           <div className="flex justify-between gap-4">

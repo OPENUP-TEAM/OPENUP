@@ -145,7 +145,7 @@ router.post(
               hotlines: crisis.hotlines,
               contact_alerted: crisis.contact_alerted,
               message:
-                'What you wrote suggests you are carrying something heavy right now. A counselor has been alerted, and you can reach someone immediately using the numbers below.',
+                'What you wrote suggests you are carrying something heavy right now. A psychologist has been alerted, and you can reach someone immediately using the numbers below.',
             }
           : null,
         mocked: mockedStt || a.mocked,
@@ -234,7 +234,7 @@ router.get(
  *
  * Any crisis alert already raised stays. The resident owns their journal,
  * but deleting the recording should not silently retract a request for
- * help that a counselor may already be acting on.
+ * help that a psychologist may already be acting on.
  */
 router.delete(
   '/:id',

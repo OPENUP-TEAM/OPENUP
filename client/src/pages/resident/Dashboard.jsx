@@ -16,7 +16,7 @@ export default function Dashboard() {
     api('/moods?days=14').then(({ entries }) => setMoods(entries)).catch(() => {});
     api('/bookings?status=confirmed').then(({ bookings }) => setBookings(bookings)).catch(() => {});
   };
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const today = new Date().toISOString().slice(0, 10);
   const todayEntry = moods.find((m) => m.entry_date.slice(0, 10) === today);

@@ -18,11 +18,22 @@ export async function api(path, { method = 'GET', body, ...rest } = {}) {
   });
 
   const payload = await res.json().catch(() => ({}));
+
   if (!res.ok) {
+    // A 401 means the token is gone or expired. Showing "sign in to
+    // continue" on a page the person cannot act on is a dead end, so send
+    // them to the login form instead, remembering where they were.
+    if (res.status === 401 && token) {
+      setToken(null);
+      const here = window.location.pathname + window.location.search;
+      window.location.replace(`/login?next=${encodeURIComponent(here)}`);
+    }
+
     const err = new Error(payload.error || 'Could not reach the server.');
     err.status = res.status;
     err.details = payload.details;
     throw err;
   }
+
   return payload;
 }

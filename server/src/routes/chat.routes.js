@@ -25,12 +25,12 @@ async function loadConversation(conversationId, user) {
             c.is_anonymous, c.status, c.created_at,
             resident.name          AS resident_name,
             resident.display_alias,
-            counselor.name         AS psychologist_name,
+            psychologist.name         AS psychologist_name,
             p.user_id              AS psychologist_user_id
        FROM conversation c
        JOIN "user" resident        ON resident.user_id = c.resident_id
        LEFT JOIN psychologist p    ON p.psychologist_id = c.psychologist_id
-       LEFT JOIN "user" counselor  ON counselor.user_id = p.user_id
+       LEFT JOIN "user" psychologist  ON psychologist.user_id = p.user_id
       WHERE c.conversation_id = $1`,
     [conversationId]
   );
@@ -39,11 +39,11 @@ async function loadConversation(conversationId, user) {
   if (!c) throw ApiError.notFound('No such conversation.');
 
   const isResident = c.resident_id === user.user_id;
-  const isCounselor = c.psychologist_user_id === user.user_id;
-  if (!isResident && !isCounselor)
+  const isPsychologist = c.psychologist_user_id === user.user_id;
+  if (!isResident && !isPsychologist)
     throw ApiError.forbidden('This conversation is not yours.');
 
-  return { ...c, isResident, isCounselor };
+  return { ...c, isResident, isPsychologist };
 }
 
 /**
@@ -57,7 +57,7 @@ const residentLabel = (c) =>
  * Start a conversation.
  *
  * psychologist_id is optional on purpose. A resident who is not ready to
- * choose a counselor can open a conversation with nobody attached, and it
+ * choose a psychologist can open a conversation with nobody attached, and it
  * lands in a queue any verified psychologist can pick up. Forcing a choice
  * first is exactly the friction this module exists to remove.
  */
@@ -82,7 +82,7 @@ router.post(
             WHERE p.psychologist_id = $1 AND p.is_verified = true AND u.status = 'active'`,
           [psychologist_id]
         );
-        if (!ok.rowCount) throw ApiError.notFound('That counselor is not available.');
+        if (!ok.rowCount) throw ApiError.notFound('That psychologist is not available.');
       }
 
       // One open conversation per pairing, so a resident does not end up
@@ -135,14 +135,14 @@ router.get(
               c.psychologist_id,
               resident.name          AS resident_name,
               resident.display_alias,
-              counselor.name         AS psychologist_name,
+              psychologist.name         AS psychologist_name,
               last.content           AS last_message,
               last.sent_at           AS last_sent_at,
               COALESCE(unread.n, 0)::int AS unread
          FROM conversation c
          JOIN "user" resident       ON resident.user_id = c.resident_id
          LEFT JOIN psychologist p   ON p.psychologist_id = c.psychologist_id
-         LEFT JOIN "user" counselor ON counselor.user_id = p.user_id
+         LEFT JOIN "user" psychologist ON psychologist.user_id = p.user_id
          LEFT JOIN LATERAL (
            SELECT content, sent_at FROM message m
             WHERE m.conversation_id = c.conversation_id
@@ -173,7 +173,7 @@ router.get(
       unclaimed: c.psychologist_id === null,
       // Each side sees the other, never themselves.
       title: isResident
-        ? c.psychologist_name || 'Waiting for a counselor'
+        ? c.psychologist_name || 'Waiting for a psychologist'
         : residentLabel(c),
     }));
 
@@ -184,14 +184,14 @@ router.get(
 /**
  * Claim an unassigned conversation.
  *
- * Locked and re-checked inside the transaction: two counselors opening the
+ * Locked and re-checked inside the transaction: two psychologists opening the
  * queue at the same moment must not both end up in the same thread.
  */
 router.patch(
   '/conversations/:id/claim',
   asyncHandler(async (req, res) => {
     if (req.user.role !== 'psychologist')
-      throw ApiError.forbidden('Only counselors can claim a conversation.');
+      throw ApiError.forbidden('Only psychologists can claim a conversation.');
 
     const claimed = await withTransaction(async (client) => {
       const { rows: me } = await client.query(
@@ -210,7 +210,7 @@ router.patch(
       const c = rows[0];
       if (!c) throw ApiError.notFound('No such conversation.');
       if (c.psychologist_id)
-        throw ApiError.conflict('Another counselor has already picked this one up.');
+        throw ApiError.conflict('Another psychologist has already picked this one up.');
 
       await client.query(
         `UPDATE conversation SET psychologist_id = $2 WHERE conversation_id = $1`,
@@ -218,7 +218,7 @@ router.patch(
       );
 
       await notify(client, c.resident_id,
-        'A counselor has joined your chat.', 'message', '/app/chat');
+        'A psychologist has joined your chat.', 'message', '/app/chat');
 
       return c;
     });
@@ -257,12 +257,15 @@ router.get(
         status: c.status,
         role: c.isResident ? 'resident' : 'psychologist',
         other_party: c.isResident
-          ? c.psychologist_name || 'Waiting for a counselor'
+          ? c.psychologist_name || 'Waiting for a psychologist'
           : residentLabel(c),
       },
+      // Ownership is decided on the client from sender_id, so history and
+      // live socket messages are judged the same way. Sending a `mine`
+      // flag here meant the two paths disagreed and the other person's
+      // replies rendered as your own.
       messages: rows.map((m) => ({
         ...m,
-        mine: m.sender_id === req.user.user_id,
         sender_name:
           m.sender_role === 'resident' ? residentLabel(c) : c.psychologist_name,
       })),
@@ -289,7 +292,7 @@ router.patch(
 
     if (is_anonymous && !c.is_anonymous)
       throw ApiError.badRequest(
-        'Your counselor has already seen your name in this conversation, so it cannot be hidden again. Start a new chat if you want to stay anonymous.'
+        'Your psychologist has already seen your name in this conversation, so it cannot be hidden again. Start a new chat if you want to stay anonymous.'
       );
 
     await query(

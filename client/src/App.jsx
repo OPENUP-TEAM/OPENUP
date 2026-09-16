@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import {
   LayoutGrid, MessageCircleHeart, MessagesSquare, CalendarPlus, Users,
-  LineChart, Mic, BookOpen, CalendarCheck, UserCheck, Flame, Wallet,
+  LineChart, Mic, BookOpen, CalendarCheck, UserCheck, Flame, Wallet, ClipboardCheck,
   FileText, ShieldCheck, Settings, CreditCard, Bell,
 } from 'lucide-react';
 
@@ -24,14 +24,20 @@ import Budget from './pages/lgu/Budget.jsx';
 import AdminDashboard from './pages/admin/Dashboard.jsx';
 import SessionRoom from './pages/SessionRoom.jsx';
 import Chat from './pages/Chat.jsx';
+import ComingSoon from './pages/ComingSoon.jsx';
 import Companion from './pages/resident/Companion.jsx';
 import Groups from './pages/Groups.jsx';
 import Resources from './pages/resident/Resources.jsx';
+import Assessment from './pages/resident/Assessment.jsx';
+import Community from './pages/resident/Community.jsx';
 import Verification from './pages/admin/Verification.jsx';
 import Credits from './pages/admin/Credits.jsx';
 import Subscriptions from './pages/admin/Subscriptions.jsx';
 import Appointments from './pages/admin/Appointments.jsx';
 import ResourcesAdmin from './pages/admin/Resources.jsx';
+import UsersAdmin from './pages/admin/Users.jsx';
+import LguAccounts from './pages/admin/LguAccounts.jsx';
+import Moderation from './pages/admin/Moderation.jsx';
 
 // Figure 27: navigation per role. Items without a page yet are added as
 // each module is built.
@@ -43,7 +49,9 @@ const RESIDENT_NAV = [
   { to: '/app/sessions',  label: 'Sessions',  icon: CalendarCheck },
   { to: '/app/groups',    label: 'Groups',    icon: Users },
   { to: '/app/mood',      label: 'Mood',      icon: LineChart },
+  { to: '/app/assessment', label: 'Check-in', icon: ClipboardCheck },
   { to: '/app/journal',   label: 'Journal',   icon: Mic },
+  { to: '/app/community', label: 'Community', icon: MessagesSquare },
   { to: '/app/resources', label: 'Resources', icon: BookOpen },
 ];
 
@@ -53,6 +61,7 @@ const PSYCHOLOGIST_NAV = [
   { to: '/psychologist/sessions',  label: 'Sessions',     icon: CalendarPlus },
   { to: '/psychologist/chat',      label: 'Chat',         icon: MessagesSquare },
   { to: '/psychologist/groups',    label: 'Groups',       icon: Users },
+  { to: '/psychologist/community', label: 'Community',    icon: MessagesSquare },
   { to: '/psychologist/clients',   label: 'Clients',      icon: Users },
   { to: '/psychologist/reports',   label: 'Reports',      icon: FileText },
 ];
@@ -74,6 +83,7 @@ const ADMIN_NAV = [
   { to: '/admin/subscriptions', label: 'Subscriptions', icon: FileText },
   { to: '/admin/appointments',  label: 'Appointments',  icon: CalendarCheck },
   { to: '/admin/resources',     label: 'Resources',     icon: BookOpen },
+  { to: '/admin/moderation',    label: 'Moderation',    icon: Flame },
   { to: '/admin/settings',      label: 'Settings',      icon: Settings },
 ];
 
@@ -103,6 +113,9 @@ export default function App() {
             <Route path="companion" element={<Companion />} />
             <Route path="groups" element={<Groups />} />
             <Route path="resources" element={<Resources />} />
+            <Route path="assessment" element={<Assessment />} />
+            <Route path="community" element={<Community />} />
+            <Route path="*" element={<ComingSoon />} />
           </Route>
 
           {/* Counseling session — full screen, no shell around the call */}
@@ -164,6 +177,8 @@ export default function App() {
             <Route path="requests" element={<Requests />} />
             <Route path="chat" element={<Chat />} />
             <Route path="groups" element={<Groups />} />
+            <Route path="community" element={<Community />} />
+            <Route path="*" element={<ComingSoon />} />
           </Route>
 
           {/* LGU */}
@@ -177,6 +192,7 @@ export default function App() {
           >
             <Route index element={<LguDashboard />} />
             <Route path="budget" element={<Budget />} />
+            <Route path="*" element={<ComingSoon />} />
           </Route>
 
           {/* Admin */}
@@ -194,6 +210,10 @@ export default function App() {
             <Route path="subscriptions" element={<Subscriptions />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="resources" element={<ResourcesAdmin />} />
+            <Route path="users" element={<UsersAdmin />} />
+            <Route path="lgu" element={<LguAccounts />} />
+            <Route path="moderation" element={<Moderation />} />
+            <Route path="*" element={<ComingSoon />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

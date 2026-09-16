@@ -32,12 +32,12 @@ async function loadSession(bookingId, user) {
             b.room_name, b.resident_id, b.psychologist_id,
             resident.name        AS resident_name,
             resident.display_alias,
-            counselor.name       AS psychologist_name,
+            psychologist.name       AS psychologist_name,
             p.user_id            AS psychologist_user_id
        FROM booking b
        JOIN "user" resident  ON resident.user_id = b.resident_id
        JOIN psychologist p   ON p.psychologist_id = b.psychologist_id
-       JOIN "user" counselor ON counselor.user_id = p.user_id
+       JOIN "user" psychologist ON psychologist.user_id = p.user_id
       WHERE b.booking_id = $1`,
     [bookingId]
   );
@@ -46,11 +46,11 @@ async function loadSession(bookingId, user) {
   if (!s) throw ApiError.notFound('No such session.');
 
   const isResident = s.resident_id === user.user_id;
-  const isCounselor = s.psychologist_user_id === user.user_id;
-  if (!isResident && !isCounselor)
+  const isPsychologist = s.psychologist_user_id === user.user_id;
+  if (!isResident && !isPsychologist)
     throw ApiError.forbidden('This session is not yours.');
 
-  return { ...s, isResident, isCounselor };
+  return { ...s, isResident, isPsychologist };
 }
 
 /** Minutes from now until the slot; negative once it has started. */
@@ -84,7 +84,7 @@ router.get(
     if (until < -CLOSE_AFTER_MIN)
       throw ApiError.badRequest('This session has ended.');
 
-    // The counselor sees the alias, not the legal name, unless the resident
+    // The psychologist sees the alias, not the legal name, unless the resident
     // has chosen to share it. Consistent with how bookings are displayed.
     const residentLabel = s.display_alias || s.resident_name;
 
@@ -95,10 +95,10 @@ router.get(
       schedule: s.schedule,
       duration_min: s.duration_min,
       session_type: s.session_type,
-      role: s.isCounselor ? 'psychologist' : 'resident',
+      role: s.isPsychologist ? 'psychologist' : 'resident',
       // What each side is shown inside the call.
-      display_name: s.isCounselor ? s.psychologist_name : residentLabel,
-      other_party: s.isCounselor ? residentLabel : s.psychologist_name,
+      display_name: s.isPsychologist ? s.psychologist_name : residentLabel,
+      other_party: s.isPsychologist ? residentLabel : s.psychologist_name,
       minutes_until: Math.round(until),
     });
   })
@@ -109,10 +109,10 @@ router.get(
   '/:bookingId/notes',
   asyncHandler(async (req, res) => {
     const s = await loadSession(req.params.bookingId, req.user);
-    // Clinical notes are the counselor's record. A resident reading unfiltered
+    // Clinical notes are the psychologist's record. A resident reading unfiltered
     // notes mid-session would change what gets written, and what gets written
     // is what makes the notes useful.
-    if (!s.isCounselor) throw ApiError.forbidden('Only the counselor can see session notes.');
+    if (!s.isPsychologist) throw ApiError.forbidden('Only the psychologist can see session notes.');
 
     const { rows } = await query(
       `SELECT note_id, content, created_at
@@ -133,7 +133,7 @@ router.post(
       .parse(req.body);
 
     const s = await loadSession(req.params.bookingId, req.user);
-    if (!s.isCounselor) throw ApiError.forbidden('Only the counselor can write session notes.');
+    if (!s.isPsychologist) throw ApiError.forbidden('Only the psychologist can write session notes.');
 
     const { rows } = await query(
       `INSERT INTO session_note (booking_id, psychologist_id, content)
@@ -149,7 +149,7 @@ router.post(
  * 4. Escalate to Emergency Services — psychologist only.
  *
  * Raises a crisis alert against the resident and returns hotline numbers
- * to the counselor immediately. The counselor is on a call with someone in
+ * to the psychologist immediately. The psychologist is on a call with someone in
  * danger; they need numbers on screen, not a notification to read later.
  */
 router.post(
@@ -163,8 +163,8 @@ router.post(
       .parse(req.body);
 
     const s = await loadSession(req.params.bookingId, req.user);
-    if (!s.isCounselor)
-      throw ApiError.forbidden('Only the counselor can escalate a session.');
+    if (!s.isPsychologist)
+      throw ApiError.forbidden('Only the psychologist can escalate a session.');
 
     const alert = await raiseCrisisAlert({
       userId: s.resident_id,
@@ -173,7 +173,7 @@ router.post(
       riskLevel: severity,
     });
 
-    // Link the alert to this booking and to the counselor who raised it,
+    // Link the alert to this booking and to the psychologist who raised it,
     // so the admin queue shows who is already involved.
     await query(
       `UPDATE crisis_alert
@@ -199,7 +199,7 @@ router.post(
         notify(
           null,
           a.user_id,
-          'A counselor escalated a live session to emergency support.',
+          'A psychologist escalated a live session to emergency support.',
           'system',
           '/admin/alerts'
         )

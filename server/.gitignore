@@ -1,3 +1,7 @@
 node_modules
 .env
 uploads/
+
+# Google Cloud service account key — never commit this
+gcp-key.json
+*-key.json

@@ -34,14 +34,14 @@ router.get(
               resident.name          AS resident_name,
               resident.display_alias,
               bar.name               AS barangay_name,
-              counselor.name         AS psychologist_name,
+              psychologist.name         AS psychologist_name,
               p.psychologist_id,
               pay.amount, pay.status AS payment_status
          FROM booking b
          JOIN "user" resident   ON resident.user_id = b.resident_id
          JOIN barangay bar      ON bar.barangay_id = resident.barangay_id
          JOIN psychologist p    ON p.psychologist_id = b.psychologist_id
-         JOIN "user" counselor  ON counselor.user_id = p.user_id
+         JOIN "user" psychologist  ON psychologist.user_id = p.user_id
          LEFT JOIN payment pay  ON pay.booking_id = b.booking_id
         WHERE ($1::text   IS NULL OR b.status = $1)
           AND ($2::bigint IS NULL OR resident.barangay_id = $2)
@@ -106,7 +106,7 @@ router.get(
  * 2. Reassign Appointment.
  *
  * The Care Credit is deliberately left alone. The resident is getting the
- * session their barangay paid for, just with a different counselor, so
+ * session their barangay paid for, just with a different psychologist, so
  * releasing and re-reserving would risk losing it for no reason.
  */
 router.patch(
@@ -134,7 +134,7 @@ router.patch(
       if (!['pending', 'confirmed'].includes(bk.status))
         throw ApiError.badRequest('Only pending or confirmed appointments can be reassigned.');
       if (bk.psychologist_id === psychologist_id)
-        throw ApiError.badRequest('That is already the assigned counselor.');
+        throw ApiError.badRequest('That is already the assigned psychologist.');
 
       const { rows: target } = await client.query(
         `SELECT p.psychologist_id, p.user_id, u.name
@@ -142,7 +142,7 @@ router.patch(
           WHERE p.psychologist_id = $1 AND p.is_verified = true AND u.status = 'active'`,
         [psychologist_id]
       );
-      if (!target.length) throw ApiError.badRequest('That counselor is not available.');
+      if (!target.length) throw ApiError.badRequest('That psychologist is not available.');
 
       const { rowCount: clash } = await client.query(
         `SELECT 1 FROM booking
@@ -150,9 +150,9 @@ router.patch(
             AND status IN ('pending','confirmed')`,
         [psychologist_id, bk.schedule]
       );
-      if (clash) throw ApiError.conflict('That counselor is already booked at that time.');
+      if (clash) throw ApiError.conflict('That psychologist is already booked at that time.');
 
-      // Back to pending: the new counselor has not agreed to this yet.
+      // Back to pending: the new psychologist has not agreed to this yet.
       await client.query(
         `UPDATE booking SET psychologist_id = $2, status = 'pending'
           WHERE booking_id = $1`,
@@ -216,7 +216,7 @@ router.patch(
         [bk.booking_id]
       );
 
-      const { rows: counselor } = await client.query(
+      const { rows: psychologist } = await client.query(
         'SELECT user_id FROM psychologist WHERE psychologist_id = $1',
         [bk.psychologist_id]
       );
@@ -225,8 +225,8 @@ router.patch(
         `Your session was cancelled by an administrator. ${reason}` +
         (creditReturned ? ' Your Care Credit has been returned.' : ''),
         'session', '/app/sessions');
-      if (counselor.length) {
-        await notify(client, counselor[0].user_id,
+      if (psychologist.length) {
+        await notify(client, psychologist[0].user_id,
           'An administrator cancelled one of your sessions.',
           'session', '/psychologist/requests');
       }

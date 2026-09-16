@@ -14,7 +14,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
  *   3. Track Earnings
  *
  * Availability is the important half. Until this existed, the only way to
- * change when a counselor works was a SQL statement, which meant residents
+ * change when a psychologist works was a SQL statement, which meant residents
  * could never see accurate open slots.
  */
 
@@ -38,7 +38,7 @@ export default function PsychologistDashboard() {
     api('/me/psychologist/earnings').then(setEarnings).catch(() => {});
   };
 
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const addWindow = async (e) => {
     e.preventDefault();

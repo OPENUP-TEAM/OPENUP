@@ -158,7 +158,7 @@ router.get(
  * Add a window.
  *
  * Overlapping windows on the same day would generate duplicate booking
- * slots, so they are rejected rather than merged: a counselor who typed
+ * slots, so they are rejected rather than merged: a psychologist who typed
  * the wrong time should be told, not silently corrected.
  */
 router.post(

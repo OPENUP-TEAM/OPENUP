@@ -101,11 +101,11 @@ router.get(
       `SELECT b.booking_id, b.schedule, b.status, b.session_type, b.duration_min,
               b.room_name, b.care_credit_id IS NOT NULL AS covered_by_credit,
               resident.name AS resident_name, resident.display_alias,
-              counselor.name AS psychologist_name
+              psychologist.name AS psychologist_name
          FROM booking b
          JOIN "user" resident      ON resident.user_id = b.resident_id
          JOIN psychologist p       ON p.psychologist_id = b.psychologist_id
-         JOIN "user" counselor     ON counselor.user_id = p.user_id
+         JOIN "user" psychologist     ON psychologist.user_id = p.user_id
         WHERE ($2::boolean IS TRUE AND p.user_id = $1
                OR $2::boolean IS FALSE AND b.resident_id = $1)
           AND ($3::text IS NULL OR b.status = $3)

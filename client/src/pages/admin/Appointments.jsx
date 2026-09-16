@@ -20,7 +20,7 @@ export default function Appointments() {
   const [notice, setNotice] = useState('');
   const [busyId, setBusyId] = useState(null);
 
-  // Reassignment is a two-step flow: pick a counselor, give a reason.
+  // Reassignment is a two-step flow: pick a psychologist, give a reason.
   const [panel, setPanel] = useState(null); // { booking, mode: 'reassign'|'cancel' }
   const [alternatives, setAlternatives] = useState([]);
   const [chosen, setChosen] = useState('');
@@ -31,7 +31,7 @@ export default function Appointments() {
     api(`/appointments${qs}`).then(setData).catch((err) => setError(err.message));
   };
 
-  useEffect(load, [status]);
+  useEffect(() => { load(); }, [status]);
 
   const openReassign = async (b) => {
     setPanel({ booking: b, mode: 'reassign' });
@@ -209,7 +209,7 @@ export default function Appointments() {
                 <span className="label">Move to</span>
                 {alternatives.length === 0 ? (
                   <p className="text-sm text-ink-soft bg-paper-sunk rounded-[10px] px-3.5 py-3">
-                    No other verified counselor is free and working at that time. Cancel the
+                    No other verified psychologist is free and working at that time. Cancel the
                     session instead, or ask the resident to rebook.
                   </p>
                 ) : (
@@ -250,7 +250,7 @@ export default function Appointments() {
               placeholder={
                 panel.mode === 'reassign'
                   ? 'Dr. Santos is unwell and cannot take sessions this week.'
-                  : 'The counselor is unavailable and no replacement was free.'
+                  : 'The psychologist is unavailable and no replacement was free.'
               }
               className="w-full px-3.5 py-2.5 rounded-[10px] border border-line-strong bg-paper-raised text-sm placeholder:text-ink-faint focus:border-tide-500"
             />

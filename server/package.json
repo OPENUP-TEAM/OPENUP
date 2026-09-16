@@ -9,7 +9,8 @@
     "verify": "node scripts/verify-setup.js",
     "set-password": "node scripts/set-password.js",
     "test:api": "node scripts/test-api.js",
-    "test:crisis": "node scripts/test-crisis-floor.js"
+    "test:crisis": "node scripts/test-crisis-floor.js",
+    "check:storage": "node scripts/check-storage.js"
   },
   "dependencies": {
     "@google-cloud/speech": "^6.7.0",

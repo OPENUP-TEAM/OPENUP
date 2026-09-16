@@ -5,6 +5,7 @@ import {
   Send, Phone, UserRound, X, Heart, ShieldAlert, Loader2,
 } from 'lucide-react';
 import { api } from '../../lib/api.js';
+import CrisisPanel from '../../components/CrisisPanel.jsx';
 
 /**
  * Figure 29: AI Crisis Companion.
@@ -127,7 +128,7 @@ export default function Companion() {
           <Heart size={20} className="text-tide-500" />
           <h2 className="mt-3 font-bold">Before you start</h2>
           <p className="mt-2 text-sm text-ink-soft leading-relaxed">
-            This is software, not a counselor. It can listen and keep you company, but it
+            This is software, not a psychologist. It can listen and keep you company, but it
             cannot treat you and it will not pretend otherwise. If things get heavy, it
             will help you reach a real person.
           </p>
@@ -186,7 +187,7 @@ export default function Companion() {
       <header className="flex items-center justify-between gap-3 pb-3 border-b border-line shrink-0">
         <div>
           <p className="font-bold">Companion</p>
-          <p className="text-xs text-ink-faint">Not a counselor</p>
+          <p className="text-xs text-ink-faint">Not a psychologist</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -209,34 +210,12 @@ export default function Companion() {
 
       {/* Crisis panel. Raised by detection, stays until the page is left. */}
       {crisis && (
-        <div className="mt-3 rounded-card border-2 border-mood-1 bg-mood-1/5 p-4 shrink-0">
-          <div className="flex gap-2.5">
-            <ShieldAlert size={18} className="text-mood-1 shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold">{crisis.message}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button onClick={escalate} disabled={escalating} className="btn-primary h-9 px-4 text-xs">
-                  <UserRound size={14} />
-                  Talk to a counselor now
-                </button>
-                {crisis.hotlines.slice(0, 2).map((h) => (
-                  <a
-                    key={h.number}
-                    href={`tel:${h.number.replace(/[^0-9+]/g, '')}`}
-                    className="btn-quiet h-9 px-4 text-xs"
-                  >
-                    <Phone size={13} />
-                    {h.name} {h.number}
-                  </a>
-                ))}
-              </div>
-              {crisis.contact_alerted && (
-                <p className="mt-2.5 text-xs text-ink-soft">
-                  Your trusted contact has been recorded for follow-up.
-                </p>
-              )}
-            </div>
-          </div>
+        <div className="mt-3 shrink-0">
+          <CrisisPanel
+            message={crisis.message}
+            hotlines={crisis.hotlines}
+            contactAlerted={crisis.contact_alerted}
+          />
         </div>
       )}
 

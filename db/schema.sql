@@ -34,7 +34,7 @@ CREATE TABLE barangay (
 
 -- User ------------------------------------------------------------------
 -- role: resident | psychologist | lgu | admin
--- status: active | suspended | pending
+-- status: active | suspended | pending | rejected
 CREATE TABLE "user" (
     user_id       BIGSERIAL PRIMARY KEY,
     barangay_id   BIGINT       NOT NULL REFERENCES barangay(barangay_id),
@@ -47,7 +47,7 @@ CREATE TABLE "user" (
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
     CONSTRAINT ck_user_role   CHECK (role IN ('resident','psychologist','lgu','admin')),
-    CONSTRAINT ck_user_status CHECK (status IN ('active','suspended','pending'))
+    CONSTRAINT ck_user_status CHECK (status IN ('active','suspended','pending','rejected'))
 );
 CREATE INDEX idx_user_barangay ON "user"(barangay_id);
 CREATE INDEX idx_user_role     ON "user"(role);
@@ -333,7 +333,7 @@ CREATE TABLE trusted_contact (
 CREATE TABLE crisis_alert (
     alert_id       BIGSERIAL PRIMARY KEY,
     user_id        BIGINT      NOT NULL REFERENCES "user"(user_id) ON DELETE CASCADE,
-    source         VARCHAR(30) NOT NULL,   -- voice_journal | ai_companion | assessment
+    source         VARCHAR(30) NOT NULL,   -- voice_journal | ai_companion | assessment | session | testimonial
     source_id      BIGINT,
     risk_level     VARCHAR(20) NOT NULL,
     status         VARCHAR(20) NOT NULL DEFAULT 'open',

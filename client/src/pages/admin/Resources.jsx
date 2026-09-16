@@ -32,7 +32,7 @@ export default function ResourcesAdmin() {
       .catch((err) => setError(err.message));
   };
 
-  useEffect(load, [q]);
+  useEffect(() => { load(); }, [q]);
 
   const set = (k) => (e) =>
     setForm({ ...form, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });

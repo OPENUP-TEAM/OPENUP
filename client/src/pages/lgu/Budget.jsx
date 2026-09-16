@@ -29,7 +29,7 @@ export default function Budget() {
       .catch(() => {});
   };
 
-  useEffect(load, [q]);
+  useEffect(() => { load(); }, [q]);
 
   const assign = async (resident_id, name) => {
     setBusyId(resident_id);

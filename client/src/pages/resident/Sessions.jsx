@@ -28,7 +28,7 @@ export default function Sessions() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const cancel = async (id) => {
     setBusyId(id);
@@ -127,7 +127,7 @@ export default function Sessions() {
             You have not booked a session yet.
           </p>
           <Link to="/app/book" className="btn-primary h-10 px-5 mt-4">
-            Find a counselor
+            Find a psychologist
           </Link>
         </div>
       ) : (

@@ -31,6 +31,10 @@ import groupRoutes from './routes/group.routes.js';
 import subscriptionRoutes from './routes/subscription.routes.js';
 import appointmentsRoutes from './routes/appointments.routes.js';
 import resourceRoutes from './routes/resource.routes.js';
+import assessmentRoutes from './routes/assessment.routes.js';
+import supportRoutes from './routes/support.routes.js';
+import usersRoutes from './routes/users.routes.js';
+import testimonialRoutes from './routes/testimonial.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -74,6 +78,10 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/assessments', assessmentRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/community', testimonialRoutes);
 
 // Multer rejects oversized or wrong-type uploads with its own error class.
 app.use((err, _req, res, next) => {

@@ -18,6 +18,32 @@ export const LICENSE_BUCKET = 'licenses';
 export const JOURNAL_BUCKET = 'journals';
 export const RESOURCE_BUCKET = 'resources';
 
+/**
+ * Supabase JS reports every connection problem as "fetch failed", which
+ * hides whether the cause was a missing bucket, a bad key, or no network.
+ * This unwraps it into something a developer can act on.
+ */
+function describeUploadFailure(err, bucket) {
+  const cause = err?.cause;
+  const code = cause?.code ?? '';
+
+  if (/Bucket not found/i.test(err?.message ?? ''))
+    return `The "${bucket}" bucket does not exist. Create it in Supabase under Storage, with Public off.`;
+
+  if (['ENOTFOUND', 'EAI_AGAIN'].includes(code))
+    return 'Could not resolve the Supabase address. Check SUPABASE_URL and your connection.';
+
+  if (['ECONNREFUSED', 'ECONNRESET', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT'].includes(code))
+    return 'Could not reach Supabase Storage. Check your connection, or whether the project is paused.';
+
+  if (/fetch failed/i.test(err?.message ?? ''))
+    return `Could not reach the "${bucket}" bucket. Run "npm run check:storage" to find out why.`;
+
+  return err?.message ?? 'Unknown storage error.';
+}
+
+
+
 /** Upload a buffer and return the storage path (not a public URL). */
 export async function uploadLicense(psychologistId, file) {
   const ext = (file.originalname.split('.').pop() || 'bin').toLowerCase();
@@ -27,7 +53,7 @@ export async function uploadLicense(psychologistId, file) {
     .from(LICENSE_BUCKET)
     .upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
 
-  if (error) throw new Error(`Upload failed: ${error.message}`);
+  if (error) throw new Error(describeUploadFailure(error, LICENSE_BUCKET));
   return path;
 }
 
@@ -61,7 +87,7 @@ export async function uploadJournalAudio(userId, file) {
     .from(JOURNAL_BUCKET)
     .upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
 
-  if (error) throw new Error(`Audio upload failed: ${error.message}`);
+  if (error) throw new Error(describeUploadFailure(error, JOURNAL_BUCKET));
   return path;
 }
 
@@ -96,7 +122,7 @@ export async function uploadResource(file) {
     .from(RESOURCE_BUCKET)
     .upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
 
-  if (error) throw new Error(`Upload failed: ${error.message}`);
+  if (error) throw new Error(describeUploadFailure(error, RESOURCE_BUCKET));
   return path;
 }
 

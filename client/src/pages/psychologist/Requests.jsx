@@ -10,7 +10,7 @@ import { api } from '../../lib/api.js';
  * Module: Appointment Requests — 1. View Requests, 2. Accept, 3. Decline.
  *
  * Residents appear under their display alias where they set one. A
- * counselor deciding whether to take a slot does not need a legal name,
+ * psychologist deciding whether to take a slot does not need a legal name,
  * and the resident chose that alias precisely so they could ask for help
  * without being identified.
  */
@@ -46,7 +46,7 @@ export default function Requests() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [tab]);
+  useEffect(() => { load(); }, [tab]);
 
   const setStatus = async (id, status) => {
     setBusyId(id);

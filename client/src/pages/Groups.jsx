@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext.jsx';
  * Figure 34: Group Counseling.
  *
  * One component for both sides. Residents browse and join; a verified
- * counselor creates and facilitates.
+ * psychologist creates and facilitates.
  *
  * Nobody's name appears here. A group session is several residents in one
  * room, so anonymity matters more than in a one-on-one, not less.
@@ -33,7 +33,7 @@ export default function Groups() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -181,7 +181,7 @@ export default function Groups() {
           <p className="mt-1 text-sm text-ink-soft">
             {isPsychologist
               ? 'Sessions you facilitate. Participants join under their display names.'
-              : 'Several people, one counselor, one topic. Nobody uses their real name.'}
+              : 'Several people, one psychologist, one topic. Nobody uses their real name.'}
           </p>
         </div>
         {isPsychologist && (

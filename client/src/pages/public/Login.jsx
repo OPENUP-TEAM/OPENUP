@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { homeFor } from '../../components/ProtectedRoute.jsx';
 
@@ -7,6 +7,9 @@ import { homeFor } from '../../components/ProtectedRoute.jsx';
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // Set when a session expired mid-task, so sign-in returns them there.
+  const next = params.get('next');
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -17,7 +20,7 @@ export default function Login() {
     setBusy(true);
     try {
       const user = await login(form.email, form.password);
-      navigate(homeFor(user.role), { replace: true });
+      navigate(next || homeFor(user.role), { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -32,7 +35,10 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <Link to="/" className="text-lg font-extrabold tracking-tight">OpenUp</Link>
         <h1 className="mt-8 text-2xl font-bold tracking-tight">Welcome back</h1>
-        <p className="mt-1.5 text-sm text-ink-soft">Sign in to reach your support tools.</p>
+        <p className="mt-1.5 text-sm text-ink-soft">
+          {next ? 'Your session expired. Sign in to pick up where you left off.'
+                : 'Sign in to reach your support tools.'}
+        </p>
 
         <form onSubmit={submit} className="mt-7 space-y-4">
           <div>

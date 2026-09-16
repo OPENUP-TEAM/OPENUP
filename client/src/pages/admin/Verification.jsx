@@ -28,7 +28,7 @@ export default function Verification() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [tab]);
+  useEffect(() => { load(); }, [tab]);
 
   const approve = async (id) => {
     setBusyId(id);

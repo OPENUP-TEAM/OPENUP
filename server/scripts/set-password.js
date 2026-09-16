@@ -7,6 +7,9 @@ import pg from 'pg';
  *
  *   npm run set-password -- juan@openup.ph OpenUp123!
  *   npm run set-password -- --all OpenUp123!     (every seeded account)
+ *
+ * Also used to repair the seed data: the hash committed in seed.sql was
+ * wrong, so run --all once to give every test account a working password.
  */
 
 const args = process.argv.slice(2);

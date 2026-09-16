@@ -181,7 +181,7 @@ router.post(
 /**
  * 3. Escalate to Licensed Psychologist.
  *
- * Opens a real chat with a human, carried into the counselor queue. The
+ * Opens a real chat with a human, carried into the psychologist queue. The
  * AI conversation is not copied across: what someone told a machine at
  * 3am is theirs to repeat or not.
  */
@@ -221,7 +221,7 @@ router.post(
       await Promise.all(
         onDuty.map((p) =>
           notify(client, p.user_id,
-            'A resident asked to speak with a counselor after using the crisis companion.',
+            'A resident asked to speak with a psychologist after using the crisis companion.',
             'message', '/psychologist/chat')
         )
       );
@@ -237,7 +237,7 @@ router.post(
 
     res.status(201).json({
       conversation_id: result.conversationId,
-      counselors_notified: result.notified,
+      psychologists_notified: result.notified,
       hotlines: await getHotlines(),
     });
   })

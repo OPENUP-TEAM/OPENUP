@@ -10,7 +10,7 @@ import { api } from '../lib/api.js';
  * Figure 35: Counseling Session.
  *
  * One component for both sides. The notes panel and the escalation button
- * render only for the counselor; the resident sees the call alone.
+ * render only for the psychologist; the resident sees the call alone.
  *
  * Audio-first by design. The module is "Join Audio Session", video costs
  * bandwidth many barangay residents do not have, and talking about mental
@@ -64,10 +64,10 @@ export default function SessionRoom({ kind = 'booking' }) {
   const [hotlines, setHotlines] = useState(null);
 
   const isGroup = kind === 'group';
-  const isCounselor = session?.role === 'psychologist';
+  const isPsychologist = session?.role === 'psychologist';
   const backTo = isGroup
-    ? (isCounselor ? '/psychologist/groups' : '/app/groups')
-    : (isCounselor ? '/psychologist/requests' : '/app/sessions');
+    ? (isPsychologist ? '/psychologist/groups' : '/app/groups')
+    : (isPsychologist ? '/psychologist/requests' : '/app/sessions');
 
   // 1. Fetch room details. The server decides whether this is joinable.
   useEffect(() => {
@@ -130,13 +130,13 @@ export default function SessionRoom({ kind = 'booking' }) {
     };
   }, [session, navigate, backTo]);
 
-  // 3. Notes, counselor only.
+  // 3. Notes, psychologist only.
   useEffect(() => {
-    if (!isCounselor || isGroup) return;
+    if (!isPsychologist || isGroup) return;
     api(`/sessions/${bookingId}/notes`)
       .then(({ notes }) => setNotes(notes))
       .catch(() => {});
-  }, [isCounselor, bookingId, isGroup]);
+  }, [isPsychologist, bookingId, isGroup]);
 
   const saveNote = async () => {
     if (!draft.trim()) return;
@@ -213,7 +213,7 @@ export default function SessionRoom({ kind = 'booking' }) {
         </div>
 
         <div className="flex gap-2">
-          {isCounselor && !isGroup && (
+          {isPsychologist && !isGroup && (
             <>
               <button
                 onClick={() => setNotesOpen((o) => !o)}
@@ -250,8 +250,8 @@ export default function SessionRoom({ kind = 'booking' }) {
           <div ref={containerRef} className="w-full h-full" />
         </div>
 
-        {/* Notes panel: counselor only, alongside the call rather than over it. */}
-        {isCounselor && !isGroup && notesOpen && (
+        {/* Notes panel: psychologist only, alongside the call rather than over it. */}
+        {isPsychologist && !isGroup && notesOpen && (
           <aside className="w-full max-w-sm shrink-0 bg-paper border-l border-line flex flex-col">
             <div className="flex items-center justify-between px-4 h-12 border-b border-line">
               <h2 className="font-bold text-sm">Session notes</h2>

@@ -1,8 +1,10 @@
 -- =====================================================================
 -- OpenUp — seed data for development
 -- Run after schema.sql.
--- All test passwords are: OpenUp123!
--- (bcrypt hash below, cost 10 — regenerate for anything non-local)
+-- Passwords are placeholders. After running this file, set real ones with:
+--     cd server && npm run set-password -- --all OpenUp123!
+-- The hash below is NOT a valid password; it is a stand-in so the NOT NULL
+-- constraint is satisfied.
 -- =====================================================================
 
 BEGIN;
@@ -15,7 +17,7 @@ INSERT INTO barangay (name, city) VALUES
   ('Mambaling','Cebu City'), ('Pahina Central','Cebu City'), ('Punta Princesa','Cebu City'),
   ('Talamban','Cebu City'), ('Tisa','Cebu City'), ('Zapatera','Cebu City');
 
--- password for every seeded account = OpenUp123!
+-- Placeholder hashes. Run `npm run set-password -- --all OpenUp123!` after seeding.
 INSERT INTO "user" (barangay_id, name, email, password, role, status, display_alias) VALUES
   (1, 'System Administrator', 'admin@openup.ph',
       '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin', 'active', NULL),

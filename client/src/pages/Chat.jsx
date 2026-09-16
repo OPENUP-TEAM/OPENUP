@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext.jsx';
  * Figure 30: Anonymous Chat.
  *
  * One component for both sides. A resident starts conversations; a
- * counselor claims unassigned ones from a shared queue.
+ * psychologist claims unassigned ones from a shared queue.
  *
  * Messages travel over Socket.IO. History comes from REST, because a
  * socket that reconnects should not replay a whole thread.
@@ -25,6 +25,17 @@ const stamp = (iso) => {
 export default function Chat() {
   const { user } = useAuth();
   const isResident = user?.role === 'resident';
+
+  /**
+   * Who sent a message.
+   *
+   * Decided in one place, on the client, for every message regardless of
+   * origin. REST history used to carry a `mine` flag while live socket
+   * messages did not, so the two paths disagreed and replies from the
+   * other person rendered as your own. Postgres also returns BIGINT as a
+   * string, so the comparison is coerced rather than strict.
+   */
+  const isMine = (m) => String(m.sender_id) === String(user?.user_id);
 
   const [conversations, setConversations] = useState([]);
   const [active, setActive] = useState(null);
@@ -170,8 +181,8 @@ export default function Chat() {
             </h1>
             <p className="mt-1 text-sm text-ink-soft">
               {isResident
-                ? 'Message a counselor without giving your name.'
-                : 'Unclaimed chats are waiting for any verified counselor.'}
+                ? 'Message a psychologist without giving your name.'
+                : 'Unclaimed chats are waiting for any verified psychologist.'}
             </p>
           </div>
           {isResident && (
@@ -272,7 +283,7 @@ export default function Chat() {
         <div className="mt-3 flex items-center gap-3 bg-paper-sunk rounded-[10px] px-3.5 py-3 shrink-0">
           <ShieldCheck size={16} className="text-tide-500 shrink-0" />
           <p className="text-xs text-ink-soft flex-1">
-            Your counselor sees only your display name. You can share your real name if
+            Your psychologist sees only your display name. You can share your real name if
             you want to, but you cannot take it back afterwards.
           </p>
           <button onClick={revealName} className="btn-quiet h-8 px-3 text-xs shrink-0">
@@ -293,13 +304,11 @@ export default function Chat() {
           messages.map((m) => (
             <div
               key={m.message_id}
-              className={`flex ${m.mine || m.sender_id === user?.user_id ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${isMine(m) ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`max-w-[78%] rounded-card px-3.5 py-2.5 ${
-                  m.mine || m.sender_id === user?.user_id
-                    ? 'bg-tide-700 text-white'
-                    : 'bg-paper-sunk text-ink'
+                  isMine(m) ? 'bg-tide-700 text-white' : 'bg-paper-sunk text-ink'
                 }`}
               >
                 <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -307,7 +316,7 @@ export default function Chat() {
                 </p>
                 <p
                   className={`mt-1 text-[10px] ${
-                    m.mine || m.sender_id === user?.user_id ? 'text-white/60' : 'text-ink-faint'
+                    isMine(m) ? 'text-white/60' : 'text-ink-faint'
                   }`}
                 >
                   {stamp(m.sent_at)}

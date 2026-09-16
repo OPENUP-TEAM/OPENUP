@@ -29,7 +29,7 @@ export default function Subscriptions() {
     api(`/subscriptions${qs}`).then(setData).catch((err) => setError(err.message));
   };
 
-  useEffect(load, [filter]);
+  useEffect(() => { load(); }, [filter]);
   useEffect(() => {
     api('/subscriptions/plans').then(({ plans }) => setPlans(plans)).catch(() => {});
     api('/barangays').then(({ barangays }) => setBarangays(barangays)).catch(() => {});
