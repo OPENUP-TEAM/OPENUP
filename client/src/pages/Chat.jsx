@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { format, parseISO, isToday } from 'date-fns';
+import { useSearchParams } from 'react-router-dom';
 import {
   MessageSquarePlus, Send, ArrowLeft, EyeOff, Eye, Hand, ShieldCheck,
 } from 'lucide-react';
@@ -37,8 +38,11 @@ export default function Chat() {
    */
   const isMine = (m) => String(m.sender_id) === String(user?.user_id);
 
+  // ?c=<id> opens a thread directly, so "reach out" from an alert lands in
+  // the conversation rather than on a list the person has to search.
+  const [params, setParams] = useSearchParams();
   const [conversations, setConversations] = useState([]);
-  const [active, setActive] = useState(null);
+  const [active, setActive] = useState(params.get('c'));
   const [messages, setMessages] = useState([]);
   const [meta, setMeta] = useState(null);
   const [draft, setDraft] = useState('');
@@ -88,8 +92,20 @@ export default function Chat() {
       .then(({ conversation, messages }) => {
         setMeta(conversation);
         setMessages(messages);
+        // Loading a thread marks its messages read on the server, but it is
+        // a GET, so nothing else tells the sidebar its badge changed.
+        window.dispatchEvent(new Event('openup:counts'));
       })
-      .catch((err) => setError(err.message));
+      .catch((err) => {
+        // A thread that cannot be opened should send the person back to the
+        // list, not leave them in a shell that says "Loading…" forever and
+        // claims a name was shared when nothing loaded at all.
+        setError(err.message);
+        setActive(null);
+        setMeta(null);
+        if (params.get('c')) setParams({}, { replace: true });
+        loadList();
+      });
 
     socketRef.current?.emit('chat:join', active, (ack) => {
       if (!ack?.ok) setError(ack?.error || 'Could not join that conversation.');
@@ -259,10 +275,15 @@ export default function Chat() {
   // Thread
   // ------------------------------------------------------------------
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
+    <div className="flex flex-col flex-1 min-h-0">
       <header className="flex items-center gap-3 pb-4 border-b border-line shrink-0">
         <button
-          onClick={() => { setActive(null); setMeta(null); loadList(); }}
+          onClick={() => {
+            setActive(null);
+            setMeta(null);
+            if (params.get('c')) setParams({}, { replace: true });
+            loadList();
+          }}
           className="p-1.5 rounded-[8px] hover:bg-paper-sunk"
           aria-label="Back to conversations"
         >
@@ -271,9 +292,10 @@ export default function Chat() {
         <div className="min-w-0">
           <p className="font-bold truncate">{meta?.other_party ?? 'Loading…'}</p>
           <p className="text-xs text-ink-faint">
-            {meta?.is_anonymous
-              ? isResident ? 'Your name is hidden' : 'Resident is anonymous'
-              : isResident ? 'Sharing your name' : 'Name shared'}
+            {!meta ? '\u00A0'
+              : meta.is_anonymous
+                ? isResident ? 'Your name is hidden' : 'Resident is anonymous'
+                : isResident ? 'Sharing your name' : 'Name shared'}
           </p>
         </div>
       </header>
@@ -342,12 +364,13 @@ export default function Chat() {
         <input
           value={draft}
           onChange={onType}
-          placeholder="Write a message"
+          placeholder={meta ? 'Write a message' : 'Opening the conversation…'}
           className="field flex-1"
           aria-label="Message"
           autoComplete="off"
+          disabled={!meta}
         />
-        <button type="submit" disabled={!draft.trim()} className="btn-primary px-5">
+        <button type="submit" disabled={!draft.trim() || !meta} className="btn-primary px-5">
           <Send size={16} />
         </button>
       </form>

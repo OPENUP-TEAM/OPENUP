@@ -153,6 +153,10 @@ router.post(
         await notify(client, g.facilitator_user_id,
           `Someone joined your group session "${g.title}".`,
           'session', '/psychologist/groups');
+
+        await notify(client, req.user.user_id,
+          `You joined "${g.title}". The room opens shortly before it starts.`,
+          'session', '/app/groups');
       }
 
       return { joined: Boolean(rowCount), seats_left: g.capacity - c[0].n - (rowCount ? 1 : 0) };

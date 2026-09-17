@@ -20,6 +20,24 @@ router.use(requireAuth, requireRole('admin'));
 // lapsed payment actually has consequences.
 // ---------------------------------------------------------------------
 
+
+/**
+ * Tell a barangay's LGU account something about its subscription.
+ *
+ * Every change here has a consequence the barangay has to act on, so none
+ * of them should be discovered later by something failing.
+ */
+async function notifyBarangay(barangayId, message) {
+  const { rows } = await query(
+    `SELECT user_id FROM "user"
+      WHERE barangay_id = $1 AND role = 'lgu' AND status = 'active'`,
+    [barangayId]
+  );
+  await Promise.all(
+    rows.map((u) => notify(null, u.user_id, message, 'system', '/lgu/budget'))
+  );
+}
+
 const PLANS = {
   basic:    { label: 'Basic',    amount: 10000, credits_hint: 12 },
   standard: { label: 'Standard', amount: 18000, credits_hint: 25 },
@@ -205,10 +223,13 @@ router.patch(
                          + ($2 || ' months')::interval,
               status = 'active'
         WHERE subscription_id = $1 AND status IN ('active','expired')
-        RETURNING subscription_id, end_date`,
+        RETURNING subscription_id, barangay_id, end_date`,
       [req.params.id, months]
     );
     if (!rows.length) throw ApiError.badRequest('That subscription cannot be renewed.');
+
+    await notifyBarangay(rows[0].barangay_id,
+      `Your subscription was renewed until ${new Date(rows[0].end_date).toISOString().slice(0, 10)}.`);
 
     await query(
       `INSERT INTO audit_log (actor_id, action, entity, entity_id, meta)
@@ -243,6 +264,13 @@ router.patch(
         WHERE barangay_id = $1 AND status IN ('available','reserved')`,
       [rows[0].barangay_id]
     );
+
+    // A cancelled subscription stops new credit allocation, so the barangay
+    // finding out when allocation fails is the wrong way round.
+    await notifyBarangay(rows[0].barangay_id,
+      remaining[0].n > 0
+        ? `Your subscription was cancelled. The ${remaining[0].n} Care Credit${remaining[0].n === 1 ? '' : 's'} already issued stay valid, but no new credits can be allocated.`
+        : 'Your subscription was cancelled. No new Care Credits can be allocated.');
 
     await query(
       `INSERT INTO audit_log (actor_id, action, entity, entity_id, meta)

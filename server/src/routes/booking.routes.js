@@ -82,6 +82,10 @@ router.post(
       await notify(client, psy.rows[0].user_id,
         'You have a new session request.', 'session', '/psychologist/requests');
 
+      await notify(client, req.user.user_id,
+        `Your session request was sent to ${psy.rows[0].name}. You will hear once it is confirmed.`,
+        'session', '/app/sessions');
+
       return created;
     });
 
@@ -177,6 +181,19 @@ router.patch(
           `UPDATE care_credit SET status = 'available' WHERE credit_id = $1`,
           [rows[0].care_credit_id]
         );
+
+      // The psychologist has a slot back and needs to know. Without this a
+      // cancellation was silent on their side, and they would keep the time
+      // blocked for a session nobody was coming to.
+      const { rows: counselor } = await client.query(
+        'SELECT user_id FROM psychologist WHERE psychologist_id = $1',
+        [rows[0].psychologist_id]
+      );
+      if (counselor.length)
+        await notify(client, counselor[0].user_id,
+          'A resident cancelled a session. That slot is free again.',
+          'session', '/psychologist/requests');
+
       return rows[0];
     });
     res.json({ booking: updated });

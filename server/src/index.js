@@ -35,6 +35,11 @@ import assessmentRoutes from './routes/assessment.routes.js';
 import supportRoutes from './routes/support.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import testimonialRoutes from './routes/testimonial.routes.js';
+import settingsRoutes from './routes/settings.routes.js';
+import governanceRoutes from './routes/governance.routes.js';
+import reportsRoutes from './routes/reports.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
+import navRoutes from './routes/nav.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -47,8 +52,43 @@ app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
 
-// Sign-in and sign-up are the endpoints worth throttling.
-app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 30 }));
+/**
+ * Throttle credential guessing, and nothing else.
+ *
+ * This used to cover all of /api/auth, which includes /auth/me — called on
+ * every page load to restore a session. Ordinary use burned the quota and
+ * then locked the person out of signing back in. Only the two endpoints
+ * that accept a password are limited.
+ *
+ * skipSuccessfulRequests means a person switching between test accounts is
+ * never blocked; only repeated failures count, which is what the limit is
+ * actually for.
+ */
+const credentialLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'Too many failed sign-in attempts. Wait 15 minutes and try again.',
+  },
+});
+
+app.use('/api/auth/login', credentialLimiter);
+app.use('/api/auth/register', credentialLimiter);
+app.use('/api/auth/change-password', credentialLimiter);
+// Reset endpoints are the other way someone gets into an account, so they
+// are throttled too. Not skipSuccessful here: a successful reset request
+// still costs an email and should not be repeatable without limit.
+app.use('/api/auth/forgot-password', rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many reset requests. Try again in an hour.' },
+}));
+app.use('/api/auth/reset-password', credentialLimiter);
 
 app.get('/api/health', async (_req, res) => {
   try {
@@ -82,6 +122,11 @@ app.use('/api/assessments', assessmentRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/community', testimonialRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/governance', governanceRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/nav-counts', navRoutes);
 
 // Multer rejects oversized or wrong-type uploads with its own error class.
 app.use((err, _req, res, next) => {

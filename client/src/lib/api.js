@@ -35,5 +35,16 @@ export async function api(path, { method = 'GET', body, ...rest } = {}) {
     throw err;
   }
 
+  /*
+   * Anything that writes may change a sidebar badge: marking a
+   * notification read, resolving an alert, accepting a request. Rather
+   * than every page remembering to tell the shell, the shell listens for
+   * this and refetches.
+   *
+   * Cheaper than it looks: AppShell debounces, so a burst of writes
+   * produces one request.
+   */
+  if (method !== 'GET') window.dispatchEvent(new Event('openup:counts'));
+
   return payload;
 }

@@ -34,3 +34,41 @@
   }
   .label { @apply block text-sm font-medium text-ink-soft mb-1.5; }
 }
+
+/*
+ * Printing.
+ *
+ * An accomplishment report is taken to a budget meeting, so it has to
+ * print. Rather than generating a PDF on the server, the report screen is
+ * styled for print: the browser produces the PDF, and the document is the
+ * same thing that was on screen.
+ */
+@media print {
+  /* Navigation, buttons and controls are not part of the document. */
+  aside, nav, header, .no-print { display: none !important; }
+
+  main {
+    height: auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  body { background: white; }
+
+  /* Borders cost toner and add nothing on paper. */
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    break-inside: avoid;
+  }
+
+  /* Bars drawn with background colour print blank by default. */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  h1, h2 { break-after: avoid; }
+  table { break-inside: auto; }
+  tr { break-inside: avoid; }
+}

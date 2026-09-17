@@ -4,6 +4,7 @@ import { query } from '../config/db.js';
 import { asyncHandler, ApiError } from '../utils/http.js';
 import { requireAuth } from '../middleware/auth.js';
 import { raiseCrisisAlert, getHotlines } from '../services/crisis.service.js';
+import { getSessionWindow } from '../services/settings.service.js';
 import { notify } from '../services/notification.service.js';
 
 const router = Router();
@@ -19,8 +20,7 @@ router.use(requireAuth);
 
 // A room opens shortly before the slot and closes a while after, so a
 // leaked room name is not a permanent back door into a counseling room.
-const OPEN_BEFORE_MIN = 15;
-const CLOSE_AFTER_MIN = 90;
+// Both are configurable under System Settings.
 
 /**
  * Load a booking and confirm the caller is one of its two participants.
@@ -73,15 +73,16 @@ router.get(
       throw ApiError.badRequest(why[s.status] ?? 'This session cannot be joined.');
     }
 
+    const { open_before_min, close_after_min } = await getSessionWindow();
     const until = minutesUntil(s.schedule);
-    const opensIn = Math.ceil(until - OPEN_BEFORE_MIN);
+    const opensIn = Math.ceil(until - open_before_min);
 
-    if (until > OPEN_BEFORE_MIN)
+    if (until > open_before_min)
       throw ApiError.badRequest(
-        `The room opens ${OPEN_BEFORE_MIN} minutes before your session. Come back in ${opensIn} minute${opensIn === 1 ? '' : 's'}.`
+        `The room opens ${open_before_min} minutes before your session. Come back in ${opensIn} minute${opensIn === 1 ? '' : 's'}.`
       );
 
-    if (until < -CLOSE_AFTER_MIN)
+    if (until < -close_after_min)
       throw ApiError.badRequest('This session has ended.');
 
     // The psychologist sees the alias, not the legal name, unless the resident

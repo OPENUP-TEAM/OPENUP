@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import {
   LayoutGrid, MessageCircleHeart, MessagesSquare, CalendarPlus, Users,
-  LineChart, Mic, BookOpen, CalendarCheck, UserCheck, Flame, Wallet, ClipboardCheck,
+  LineChart, Mic, BookOpen, CalendarCheck, UserCheck, Flame, Wallet, ClipboardCheck, Activity,
   FileText, ShieldCheck, Settings, CreditCard, Bell,
 } from 'lucide-react';
 
@@ -12,6 +12,8 @@ import AppShell from './layouts/AppShell.jsx';
 import Landing from './pages/public/Landing.jsx';
 import Login from './pages/public/Login.jsx';
 import Register from './pages/public/Register.jsx';
+import ForgotPassword from './pages/public/ForgotPassword.jsx';
+import ResetPassword from './pages/public/ResetPassword.jsx';
 import Dashboard from './pages/resident/Dashboard.jsx';
 import Journal from './pages/resident/Journal.jsx';
 import Book from './pages/resident/Book.jsx';
@@ -19,17 +21,28 @@ import Sessions from './pages/resident/Sessions.jsx';
 import PsychologistDashboard from './pages/psychologist/Dashboard.jsx';
 import PendingVerification from './pages/psychologist/PendingVerification.jsx';
 import Requests from './pages/psychologist/Requests.jsx';
+import Clients from './pages/psychologist/Clients.jsx';
+import PsychReports from './pages/psychologist/Reports.jsx';
+import PsychAlerts from './pages/psychologist/Alerts.jsx';
 import LguDashboard from './pages/lgu/Dashboard.jsx';
 import Budget from './pages/lgu/Budget.jsx';
+import Directory from './pages/lgu/Directory.jsx';
+import Governance from './pages/lgu/Governance.jsx';
+import LguReports from './pages/lgu/Reports.jsx';
+import LguHeatmap from './pages/lgu/Heatmap.jsx';
+import LguAlerts from './pages/lgu/Alerts.jsx';
+import AiEffectiveness from './pages/lgu/AiEffectiveness.jsx';
 import AdminDashboard from './pages/admin/Dashboard.jsx';
 import SessionRoom from './pages/SessionRoom.jsx';
 import Chat from './pages/Chat.jsx';
 import ComingSoon from './pages/ComingSoon.jsx';
+import Notifications from './pages/Notifications.jsx';
 import Companion from './pages/resident/Companion.jsx';
 import Groups from './pages/Groups.jsx';
 import Resources from './pages/resident/Resources.jsx';
 import Assessment from './pages/resident/Assessment.jsx';
 import Community from './pages/resident/Community.jsx';
+import Privacy from './pages/resident/Privacy.jsx';
 import Verification from './pages/admin/Verification.jsx';
 import Credits from './pages/admin/Credits.jsx';
 import Subscriptions from './pages/admin/Subscriptions.jsx';
@@ -38,6 +51,9 @@ import ResourcesAdmin from './pages/admin/Resources.jsx';
 import UsersAdmin from './pages/admin/Users.jsx';
 import LguAccounts from './pages/admin/LguAccounts.jsx';
 import Moderation from './pages/admin/Moderation.jsx';
+import SettingsPage from './pages/admin/Settings.jsx';
+import AiCrisis from './pages/admin/AiCrisis.jsx';
+import Analytics from './pages/admin/Analytics.jsx';
 
 // Figure 27: navigation per role. Items without a page yet are added as
 // each module is built.
@@ -53,10 +69,12 @@ const RESIDENT_NAV = [
   { to: '/app/journal',   label: 'Journal',   icon: Mic },
   { to: '/app/community', label: 'Community', icon: MessagesSquare },
   { to: '/app/resources', label: 'Resources', icon: BookOpen },
+  { to: '/app/privacy',   label: 'Privacy',   icon: ShieldCheck },
 ];
 
 const PSYCHOLOGIST_NAV = [
   { to: '/psychologist',           label: 'Dashboard',    icon: LayoutGrid, end: true },
+  { to: '/psychologist/alerts',    label: 'Alerts',       icon: Bell },
   { to: '/psychologist/requests',  label: 'Requests',     icon: CalendarCheck },
   { to: '/psychologist/sessions',  label: 'Sessions',     icon: CalendarPlus },
   { to: '/psychologist/chat',      label: 'Chat',         icon: MessagesSquare },
@@ -71,6 +89,9 @@ const LGU_NAV = [
   { to: '/lgu/heatmap',  label: 'Heatmap',      icon: Flame },
   { to: '/lgu/alerts',   label: 'Risk alerts',  icon: Bell },
   { to: '/lgu/budget',   label: 'Budget',       icon: Wallet },
+  { to: '/lgu/directory', label: 'Psychologists', icon: UserCheck },
+  { to: '/lgu/ai-tracker', label: 'AI tracker',  icon: Activity },
+  { to: '/lgu/governance', label: 'Governance',  icon: ShieldCheck },
   { to: '/lgu/reports',  label: 'Reports',      icon: FileText },
 ];
 
@@ -84,6 +105,8 @@ const ADMIN_NAV = [
   { to: '/admin/appointments',  label: 'Appointments',  icon: CalendarCheck },
   { to: '/admin/resources',     label: 'Resources',     icon: BookOpen },
   { to: '/admin/moderation',    label: 'Moderation',    icon: Flame },
+  { to: '/admin/ai-crisis',     label: 'Crisis',        icon: Bell },
+  { to: '/admin/analytics',     label: 'Analytics',     icon: Activity },
   { to: '/admin/settings',      label: 'Settings',      icon: Settings },
 ];
 
@@ -95,6 +118,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Resident */}
           <Route
@@ -115,6 +140,8 @@ export default function App() {
             <Route path="resources" element={<Resources />} />
             <Route path="assessment" element={<Assessment />} />
             <Route path="community" element={<Community />} />
+            <Route path="privacy" element={<Privacy />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<ComingSoon />} />
           </Route>
 
@@ -178,6 +205,10 @@ export default function App() {
             <Route path="chat" element={<Chat />} />
             <Route path="groups" element={<Groups />} />
             <Route path="community" element={<Community />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="reports" element={<PsychReports />} />
+            <Route path="alerts" element={<PsychAlerts />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<ComingSoon />} />
           </Route>
 
@@ -192,6 +223,13 @@ export default function App() {
           >
             <Route index element={<LguDashboard />} />
             <Route path="budget" element={<Budget />} />
+            <Route path="directory" element={<Directory />} />
+            <Route path="governance" element={<Governance />} />
+            <Route path="reports" element={<LguReports />} />
+            <Route path="heatmap" element={<LguHeatmap />} />
+            <Route path="alerts" element={<LguAlerts />} />
+            <Route path="ai-tracker" element={<AiEffectiveness />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<ComingSoon />} />
           </Route>
 
@@ -213,6 +251,11 @@ export default function App() {
             <Route path="users" element={<UsersAdmin />} />
             <Route path="lgu" element={<LguAccounts />} />
             <Route path="moderation" element={<Moderation />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="ai-crisis" element={<AiCrisis />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="ai-tracker" element={<AiEffectiveness />} />
             <Route path="*" element={<ComingSoon />} />
           </Route>
 

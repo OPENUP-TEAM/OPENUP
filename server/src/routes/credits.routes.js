@@ -161,6 +161,19 @@ router.post(
     if (!rowCount)
       throw ApiError.badRequest('That barangay has no unassigned credits to withdraw.');
 
+    const { rows: lgu } = await query(
+      `SELECT user_id FROM "user"
+        WHERE barangay_id = $1 AND role = 'lgu' AND status = 'active'`,
+      [barangay_id]
+    );
+    await Promise.all(
+      lgu.map((u) =>
+        notify(null, u.user_id,
+          `${rowCount} unassigned Care Credit${rowCount === 1 ? '' : 's'} was withdrawn from your pool.`,
+          'system', '/lgu/budget')
+      )
+    );
+
     await query(
       `INSERT INTO audit_log (actor_id, action, entity, entity_id, meta)
        VALUES ($1, 'credits.withdraw', 'barangay', $2, $3)`,
@@ -329,6 +342,12 @@ router.post(
 
     if (!rowCount)
       throw ApiError.badRequest('That resident has no unused credits to reclaim.');
+
+    // A resident who had a credit and now does not should be told. Finding
+    // out at the moment you try to book is worse.
+    await notify(null, resident_id,
+      `${rowCount} unused Care Credit${rowCount === 1 ? '' : 's'} was returned to your barangay's pool.`,
+      'system', '/app/book');
 
     await query(
       `INSERT INTO audit_log (actor_id, action, entity, entity_id, meta)
